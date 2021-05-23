@@ -16,7 +16,7 @@ plt.style.use('seaborn-whitegrid')
 # ================================================
 #         DIFFERENTIAL EVOLUTION ALGORITHM
 # ================================================
-
+# io amo simone
 
 NDIM = 2  # Problem Dimension
 
