@@ -28,6 +28,8 @@ num_classes = 10
 bs = 32
 epochs = 20
 
+print(x_train.shape)
+
 x_train_r = x_train.reshape(tot_train_examples, width, height, channels)
 x_test_r = x_test.reshape(tot_test_examples, width, height, channels)
 
