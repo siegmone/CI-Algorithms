@@ -33,19 +33,47 @@ mass_train, mass_valid, mass_test = split_data(mass)
 y_train, y_valid, y_test = split_data(y)
 
 
-def to_cat(dataset):
+def to_array(dataset):
     arr = np.zeros(dataset.shape)
     dataset.read_direct(arr)
-    return to_categorical(arr)
+    return arr
 
 
-y_train_cat, y_valid_cat, y_test_cat = to_cat(
-    y_train), to_cat(y_valid), to_cat(y_test)
+et_train_r, et_valid_r, et_test_r = to_array(
+    et_train), to_array(et_valid), to_array(et_test)
+ht_train_r, ht_valid_r, ht_test_r = to_array(
+    ht_train), to_array(ht_valid), to_array(ht_test)
 
-print(y_train_cat.shape)
+
+tot_train_examples, tot_valid_examples, tot_test_examples, width, height, depth = et_train_r.shape[0], et_valid_r.shape[z0] et_test_r.shape[z0]
+et_train_r = et_train_r.reshape(tot_train_examples, width, height, depth)
+et_valid_r = et_valid_r.reshape(tot_train_examples, width, height, depth)
+et_test_r = et_test_r.reshape(tot_train_examples, width, height, depth)
+ht_train_r = ht_train_r.reshape(tot_train_examples, width, height, depth)
+ht_valid_r = ht_valid_r.reshape(tot_train_examples, width, height, depth)
+ht_test_r = ht_test_r.reshape(tot_train_examples, width, height, depth)
+
+
+y_train_r, y_valid_r, y_test_r = to_array(
+    y_train), to_array(y_valid), to_array(y_test)
+
+y_train_cat, y_valid_cat, y_test_cat = to_categorical(
+    y_train_r), to_categorical(y_valid_r), to_categorical(y_test_r)
+
+y_train_cat, y_valid_cat, y_test_cat = y_train_cat.reshape(y_train_cat.shape + (
+    1,)), y_valid_cat.reshape(y_valid_cat.shape + (1,)), y_test_cat.reshape(y_test_cat.shape + (1,))
+
+
+hl_train_cat, hl_valid_cat, hl_test_cat = to_array(
+    hl_train), to_array(hl_valid), to_array(hl_test)
+
+
+output = 32
+#### CNN IMMAGINI ####
 
 
 def create_cnn(width, height, depth, filters, n_dense, hidden_units, dp):
+    global output
     # initialize the input shape and channel dimension, assuming
     # TensorFlow/channels-last ordering
     inputShape = (height, width, depth)
@@ -59,10 +87,10 @@ def create_cnn(width, height, depth, filters, n_dense, hidden_units, dp):
         if i == 0:
             x = inputs
         # CONV => RELU => BN => POOL
-        x = Conv2D(f, (3, 3), padding="same")(x)
+        x = Conv2D(f, (1, 1), padding="same")(x)
         x = Activation("relu")(x)
         x = BatchNormalization(axis=chanDim)(x)
-        x = Conv2D(f, (4, 4), padding="same")(x)
+        x = Conv2D(f, (1, 1), padding="same")(x)
         x = Activation("relu")(x)
         x = BatchNormalization(axis=chanDim)(x)
         x = MaxPooling2D(pool_size=(2, 2))(x)
@@ -76,54 +104,44 @@ def create_cnn(width, height, depth, filters, n_dense, hidden_units, dp):
         x = Dropout(dp)(x)
         # apply another FC layer, this one to match the number of nodes
         # coming out of the MLP
-        x = Dense(32)(x)
+        x = Dense(output)(x)
         x = Activation("relu")(x)
         # construct the CNN
-        model = Model(inputs, x)
-        # return the CNN
-        return model
-
-
-# cnn_ht = create_cnn(width=32, height=32, depth=1, filters=(
-#     8, 16, 32), n_dense=2, hidden_units=80, dp=0.5)
-# cnn_et = create_cnn(width=31, height=31, depth=1, filters=(
-#     32, 64, 128), n_dense=2, hidden_units=160, dp=0.0)
-
-
-# def create_cnn(width, height, depth, filters, n_dense, hidden_units, dp):
-#     inputShape = (height, width, depth)
-#     model = Sequential()
-#     model.add(Conv2D(filters=128, kernel_size=(3, 3),
-#               activation='relu', input_shape=inputShape))
-#     model.add(BatchNormalization())
-#     model.add(Conv2D(filters=64, kernel_size=(3, 3), activation='relu'))
-#     model.add(BatchNormalization())
-#     model.add(Flatten())
-#     model.add(Dense(64, activation='sigmoid'))
-#     model.add(Dense(4, activation='softmax'))
-#
-#     return model
+    model = Model(inputs, x)
+    # return the CNN
+    return model
 
 
 cnn_ht = create_cnn(width=32, height=32, depth=1, filters=(
-    8, 16, 32), n_dense=2, hidden_units=90, dp=0.4)
+    47, 47, 47), n_dense=2, hidden_units=146, dp=0.0)
 cnn_et = create_cnn(width=31, height=31, depth=1, filters=(
-    32, 64, 128), n_dense=2, hidden_units=180, dp=0.1)
+    47, 47, 47), n_dense=2, hidden_units=146, dp=0.0)
 
+x = Dense(output, activation="relu")(cnn_et.output)
+x = Flatten()(x)
+x = Dense(2, activation="softmax")(x)
 
-# create the input to our final set of layers as the *output* of both
-# the MLP and CNN
-combinedInput = concatenate([cnn_ht.output, cnn_et.output])
-# our final FC layer head will have two dense layers, the final one
-# being our regression head
-x = Dense(2, activation="softmax")(combinedInput)
-#x = Dense(1, activation="linear")(x)
-# our final model will accept categorical/numerical data on the MLP
-# input and images on the CNN input, outputting a single value (the
-# predicted price of the house)
 model = Model(inputs=[cnn_ht.input, cnn_et.input], outputs=x)
 
-opt = Nadam(0.0001, lr=0.0001)
+
+#### MLP ####
+# Creazione del Modello
+# hl_train_cat = hl_train_cat.reshape(hl_train_cat.shape)
+# hl_test_cat = hl_test_cat.reshape(hl_test_cat.shape)
+
+
+# input_shape = (7,)
+# model = Sequential()
+# model.add(Dense(128, activation='sigmoid', input_shape=input_shape))
+# model.add(Dense(64, activation='relu'))
+# model.add(Dense(64, activation='relu'))
+# model.add(Dense(32, activation='relu'))
+# model.add(Dense(1, activation='softmax'))
+# model.add(Dropout(0.2))
+# model.build(input_shape)
+# model.summary()
+
+opt = Adam(0.0001)
 
 model.compile(loss=tf.keras.losses.categorical_crossentropy,
               optimizer=opt, metrics=['accuracy'])
@@ -132,17 +150,34 @@ model.compile(loss=tf.keras.losses.categorical_crossentropy,
 
 print("[INFO] training model...")
 
-model.fit(
+model.fit(x=[ht_train_r, et_train_r], y=y_train_cat,
 
-    x=[get_images(ht_train), get_images(et_train)], y=y_train_cat,
+          validation_data=([ht_valid_r, et_valid_r], y_valid_cat),
 
-    validation_data=(
-        [get_images(ht_valid), get_images(et_valid)], y_valid_cat),
+          epochs=25, batch_size=128, verbose=1)
 
-    epochs=25, batch_size=128, verbose=1)
+score = model.evaluate([ht_test_r, et_test_r], y_valid_cat, verbose=1)
 
-score = model.evaluate(
-    [get_images(ht_test), get_images(et_test)], y_test_cat, verbose=1)
+
+# model.fit(
+#
+#     x=get_images(et_train), y=y_train_cat,
+#
+#     validation_data=(get_images(et_valid), y_valid_cat),
+#
+#     epochs=25, batch_size=256, verbose=1)
+
+# model.fit(
+#
+#     x=hl_train_cat, y=y_train_cat,
+#
+#     validation_data=(hl_valid_cat, y_valid_cat),
+#
+#     epochs=25, batch_size=128, verbose=1)
+#
+# score = model.evaluate(hl_test_cat, y_test_cat, verbose=1)
+
+
 # make predictions on the testing data
 
 print("[INFO] predicting electrons...")

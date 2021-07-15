@@ -130,8 +130,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
+ProgettoSerio/images/
+ProgettoSerio/immagini_et/
 ProgettoSerio/data.h5
+ProgettoSerio/unscaled_data.h5
 ProgettoEsame/Testfiles/graphs
 ProgettoEsame/Testfiles/logs
 ProgettoEsame/Testfiles/test
