@@ -1,16 +1,15 @@
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sn
 import tensorflow as tf
 from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
 from tensorflow import keras
 from tensorflow.keras import backend as K
-from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import (Activation, BatchNormalization, Conv2D,
                                      Dense, Dropout, Flatten, Input,
                                      MaxPooling2D, concatenate)
 from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.optimizers import Adadelta, Adam, Nadam
 from tensorflow.keras.utils import to_categorical
 
 
@@ -41,6 +40,21 @@ def create_cnn(input_shape, filters, n_dense, hidden_units, dp):
         else:
             add_cnn_block(model=model, input_shape=input_shape, filter=f)
 
+    model.add(Flatten())
+
+    for _ in range(n_dense):
+        model.add(Dense(hidden_units))
+        model.add(Activation("relu"))
+
+    model.add(Dropout(dp))
+    model.add(Dense(2))
+    model.add(Activation("softmax"))
+
+    return model
+
+
+def create_mlp(input_shape, n_dense, hidden_units, dp):  # MODIFICA MIA ####
+    model = Sequential()
     model.add(Flatten())
 
     for _ in range(n_dense):
@@ -87,7 +101,7 @@ def shape_data(train, valid, test):
     return train_r, valid_r, test_r
 
 
-def plot_history(model_history, parameter):
+def plot_history(model_history, parameter, network):
     fig, ax = plt.subplots(figsize=(19.20, 10.80))
     ax.plot(model_history.history[f'{parameter}'])
     ax.plot(model_history.history[f'val_{parameter}'])
@@ -96,12 +110,28 @@ def plot_history(model_history, parameter):
     ax.set_xlabel('epoch')
     if parameter == 'loss':
         ax.set_ylim(bottom=0)
+        ax.legend(['train', 'test'], loc='upper right')
     if parameter == 'accuracy':
         ax.set_ylim(top=1)
+        ax.legend(['train', 'test'], loc='lower right')
+    fig.savefig(f'{network}_{parameter}')
 
-    ax.legend(['train', 'test'], loc='upper left')
-    fig.savefig(f'{parameter} Doppia CNN')
 
-
-def reverse_to_cat(dataset):
+def reverse_to_cat(dataset, content):
     return [np.argmax(y, axis=None, out=None) for y in dataset]
+
+
+def write_to_file(filepath, content, network):
+    with open(filepath, 'a') as f:
+        txt = f'''--- {network} Results ---
+        Test loss: {content[0]}
+        Test accuracy: {content[1]}
+        '''
+        f.write(txt)
+
+
+def plot_conf_mat(model, Y_pred, Y_true):
+    fig = plt.figure(figsize=(19.20, 10.80))
+    cm = confusion_matrix(Y_pred, Y_true)
+    sn.heatmap(cm, annot=True, annot_kws={"size": 14})
+    fig.savefig('MLP confusion matrix')
