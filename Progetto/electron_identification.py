@@ -14,24 +14,24 @@ open('CNN_Results.txt', 'w').close()
 open('MLP_Results.txt', 'w').close()
 
 
-def run_neural_network(model, train, valid, test, network):
-    opt = Adam(epsilon=0.01, learning_rate=0.00001)
+def run_neural_network(model, train, valid, test, learning_rate, epochs, network_name):
+    opt = Adam(epsilon=0.01, learning_rate=learning_rate)
     model.compile(loss=tf.keras.losses.categorical_crossentropy,
                   optimizer=opt, metrics=['accuracy'])
 
     history = model.fit(x=train[0], y=train[1], batch_size=128,
-                        epochs=150, verbose=1, validation_data=(valid[0], valid[1]))
+                        epochs=epochs, verbose=1, validation_data=(valid[0], valid[1]))
 
     score = model.evaluate(test[0], test[1], verbose=0)
 
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
-    write_to_file(filepath=f'{network}_Results.txt',
-                  content=score, network=network)
+    write_to_file(filepath=f'{network_name}_Results.txt',
+                  content=score, network_name=network_name)
 
-    plot_history(history, 'loss', network=network)
-    plot_history(history, 'accuracy', network=network)
+    plot_history(history, 'loss', network_name=network_name)
+    plot_history(history, 'accuracy', network_name=network_name)
 
     print('============ PREDICT ============')
     y_pred = reverse_to_cat(model.predict(train[0]))
@@ -43,7 +43,8 @@ def run_neural_network(model, train, valid, test, network):
     true_labels = ['Electron' if value == 1 else 'Jet' for value in y_true]
     print(true_labels[:20])
 
-    plot_conf_mat(model=model, Y_pred=y_pred, Y_true=y_true)
+    plot_conf_mat(model=model, Y_pred=y_pred,
+                  Y_true=y_true, network_name=network_name)
 
     return score
 
@@ -76,24 +77,23 @@ y_valid_cat = to_categorical(y_valid)
 y_test_cat = to_categorical(y_test)
 
 
-mlp_hl = create_mlp(input_shape=(8, 1), n_dense=3, hidden_units=128, dp=0.1)
-cnn_et = create_cnn(input_shape=et_input_shape, filters=(
-    16, 32, 64, 128), n_dense=3, hidden_units=128, dp=0.1)
-
-
 # Running cnn on et images
 print('######################## RUNNING CNN_ET ########################')
-run_neural_network(cnn_et, (et_train_r, y_train_cat),
-                   (et_valid_r, y_valid_cat), (et_test_r, y_test_cat), 'CNN')
+cnn_et = create_cnn(input_shape=et_input_shape, filters=(
+    32, 32, 32), n_dense=3, hidden_units=128, dp=0.1)
+run_neural_network(model=cnn_et, train=(et_train_r, y_train_cat), valid=(et_valid_r, y_valid_cat), test=(
+    et_test_r, y_test_cat), learning_rate=0.000001, epochs=80, network_name='CNN')
 
 # Running mlp on hl and mass
 print('######################## RUNNING MLP_HL (10 times) ########################')
 scores = []
 for r in range(10):
+    mlp_hl = create_mlp(input_shape=(8, 1), n_dense=2,
+                        hidden_units=128, dp=0.1)
     print(
         f'-------------------- Running {r} iteration of MLP --------------------')
-    score_mlp = run_neural_network(
-        mlp_hl, (hl_m_train, y_train_cat), (hl_m_valid, y_valid_cat), (hl_m_test, y_test_cat), 'MLP')
+    score_mlp = run_neural_network(model=mlp_hl, train=(hl_m_train, y_train_cat), valid=(
+        hl_m_valid, y_valid_cat), test=(hl_m_test, y_test_cat), learning_rate=0.00001, epochs=100, network_name='MLP')
 
     scores.append(score_mlp)
 

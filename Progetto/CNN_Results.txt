@@ -1,0 +1,4 @@
+--- CNN Results ---
+        Test loss: 0.3588639199733734
+        Test accuracy: 0.8478255867958069
+        

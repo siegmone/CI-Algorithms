@@ -1,0 +1,31 @@
+--- MLP Results ---
+        Test loss: 0.30612432956695557
+        Test accuracy: 0.8833562135696411
+        --- MLP Results ---
+        Test loss: 0.3062923848628998
+        Test accuracy: 0.8833794593811035
+        --- MLP Results ---
+        Test loss: 0.3033779561519623
+        Test accuracy: 0.8841705918312073
+        --- MLP Results ---
+        Test loss: 0.30609357357025146
+        Test accuracy: 0.8836121559143066
+        --- MLP Results ---
+        Test loss: 0.3061195909976959
+        Test accuracy: 0.8836587071418762
+        --- MLP Results ---
+        Test loss: 0.3016677498817444
+        Test accuracy: 0.885101318359375
+        --- MLP Results ---
+        Test loss: 0.30585426092147827
+        Test accuracy: 0.8839378952980042
+        --- MLP Results ---
+        Test loss: 0.3026772141456604
+        Test accuracy: 0.8851944208145142
+        --- MLP Results ---
+        Test loss: 0.3045181930065155
+        Test accuracy: 0.8843101859092712
+        --- MLP Results ---
+        Test loss: 0.3047157824039459
+        Test accuracy: 0.8842171430587769
+        

@@ -15,7 +15,7 @@ from tensorflow.keras.utils import to_categorical
 
 def add_cnn_block(model, input_shape, filter, input_layer=False):
     if input_layer:
-        model.add(Conv2D(filters=filter, kernel_size=(1, 1),
+        model.add(Conv2D(filters=filter, kernel_size=(3, 3),
                   input_shape=input_shape, padding='same'))
         model.add(Activation("relu"))
         model.add(Conv2D(filters=filter, kernel_size=(3, 3), padding='same'))
@@ -55,9 +55,11 @@ def create_cnn(input_shape, filters, n_dense, hidden_units, dp):
 
 def create_mlp(input_shape, n_dense, hidden_units, dp):  # MODIFICA MIA ####
     model = Sequential()
-    model.add(Flatten())
-
+    input_layer_ = True
     for _ in range(n_dense):
+        if input_layer_:
+            model.add(Dense(hidden_units, input_shape=input_shape))
+            model.add(Activation("relu"))
         model.add(Dense(hidden_units))
         model.add(Activation("relu"))
 
@@ -101,37 +103,35 @@ def shape_data(train, valid, test):
     return train_r, valid_r, test_r
 
 
-def plot_history(model_history, parameter, network):
-    fig, ax = plt.subplots(figsize=(19.20, 10.80))
+def plot_history(model_history, parameter, network_name):
+    fig, ax = plt.subplots()
     ax.plot(model_history.history[f'{parameter}'])
     ax.plot(model_history.history[f'val_{parameter}'])
     ax.set_title(f'model {parameter}')
     ax.set_ylabel(f'{parameter}')
     ax.set_xlabel('epoch')
     if parameter == 'loss':
-        ax.set_ylim(bottom=0)
         ax.legend(['train', 'test'], loc='upper right')
     if parameter == 'accuracy':
-        ax.set_ylim(top=1)
         ax.legend(['train', 'test'], loc='lower right')
-    fig.savefig(f'{network}_{parameter}')
+    fig.savefig(f'{network_name}_{parameter}')
 
 
-def reverse_to_cat(dataset, content):
+def reverse_to_cat(dataset):
     return [np.argmax(y, axis=None, out=None) for y in dataset]
 
 
-def write_to_file(filepath, content, network):
+def write_to_file(filepath, content, network_name):
     with open(filepath, 'a') as f:
-        txt = f'''--- {network} Results ---
+        txt = f'''--- {network_name} Results ---
         Test loss: {content[0]}
         Test accuracy: {content[1]}
         '''
         f.write(txt)
 
 
-def plot_conf_mat(model, Y_pred, Y_true):
+def plot_conf_mat(model, Y_pred, Y_true, network_name):
     fig = plt.figure(figsize=(19.20, 10.80))
     cm = confusion_matrix(Y_pred, Y_true)
     sn.heatmap(cm, annot=True, annot_kws={"size": 14})
-    fig.savefig('MLP confusion matrix')
+    fig.savefig(f'{network_name} confusion matrix')
