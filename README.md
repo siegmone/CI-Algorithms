@@ -1,5 +1,10 @@
 # CI-Algorithms
 
+Progetto di esame del corso di Intelligenza Computazionale del Corso di Laurea in Fisica @ Universita' di Napoli Federico II.
+
+## Descrizione
+Identificazione di sciami elettronici e adronici tramite l'analisi delle immagini di calorimetri elettronici e adronici con una rete neurale supervisionata.
+
 ## TO-DO
 
 - Costruire il modello (MLP oppure CNN), con layer di Dropout e BatchNormalization.
